@@ -1,5 +1,22 @@
 <img src="public/logo.svg" alt="Kaizen Logo" width="64" style="background: #666; padding: 0.25rem; border-radius: 100%; margin-bottom: 1rem;" />
 
+## Getting started
+
+```bash
+npm install
+npm run dev
+```
+
+The app runs at http://localhost:3000.
+
+## Running tests
+
+```bash
+npm test
+```
+
+Tests live in `app/server/__tests__/`. The suite covers the price filter feature — `maxHourlyRateDollars` calculation and `searchVehicles` price boundary behaviour.
+
 ## Project requirements
 
 Out of the box, this project allows users to find and reserve vehicles available for a given time range. You will extend the project by fixing the search filter bug described below and by implementing a new discount type.
