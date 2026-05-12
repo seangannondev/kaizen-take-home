@@ -21,16 +21,12 @@ export const getAvailableVehicles = ({
   passengerCount,
   classifications,
   makes,
-  priceMinDollars,
-  priceMaxDollars,
 }: {
   startTime: DateTime;
   endTime: DateTime;
   passengerCount: number;
   classifications: string[];
   makes: string[];
-  priceMinDollars: number;
-  priceMaxDollars: number;
 }) => {
   return VEHICLES.filter((car) => {
     const reservations = RESERVATIONS_BY_VEHICLE_ID[car.id] ?? [];
@@ -41,19 +37,12 @@ export const getAvailableVehicles = ({
       );
     });
 
-    const matchesPrice =
-      car.hourly_rate_cents >= priceMinDollars * 100 &&
-      car.hourly_rate_cents <= priceMaxDollars * 100;
-
     const matchesClassification = classifications.includes(car.classification);
-
     const matchesMake = makes.includes(car.make);
-
     const matchesPassengerCount = car.max_passengers >= passengerCount;
 
     return (
       isAvailableWithinTimeRange &&
-      matchesPrice &&
       matchesClassification &&
       matchesMake &&
       matchesPassengerCount
