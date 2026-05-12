@@ -5,6 +5,14 @@ import {
   getVehicleById,
   getVehicles,
 } from "./data_helpers";
+import { calculatePricing, PricingResult } from "./discounts";
+import { Vehicle } from "./data";
+
+export interface VehicleSearchResult extends Vehicle {
+  pricing: PricingResult;
+}
+
+export type { PricingResult };
 
 const parseAndValidateTimeRange = (startTime: string, endTime: string) => {
   const start = DateTime.fromISO(startTime);
@@ -25,19 +33,6 @@ const parseAndValidateTimeRange = (startTime: string, endTime: string) => {
   return { start, end };
 };
 
-const calculateTotalPrice = (
-  start: DateTime,
-  end: DateTime,
-  hourlyRateCents: number,
-) => {
-  const durationInHours = end.diff(start, "hours").hours || 0;
-
-  return {
-    totalPriceCents: hourlyRateCents * durationInHours,
-    hourlyRateCents,
-    durationInHours,
-  };
-};
 
 const validateReservationAndGetVehicle = (input: {
   vehicleId: string;
@@ -75,9 +70,6 @@ function searchVehicles(input: {
     priceMax,
   } = input;
 
-  const parsedPriceMin = priceMin;
-  const parsedPriceMax = priceMax;
-
   try {
     const { start, end } = parseAndValidateTimeRange(startTime, endTime);
 
@@ -87,18 +79,22 @@ function searchVehicles(input: {
       passengerCount,
       classifications,
       makes,
-      priceMinDollars: parsedPriceMin,
-      priceMaxDollars: parsedPriceMax,
     });
 
-    return {
-      vehicles: availableVehicles,
-    };
+    const vehicles: VehicleSearchResult[] = availableVehicles
+      .map((vehicle) => ({
+        ...vehicle,
+        pricing: calculatePricing(vehicle.hourly_rate_cents, start, end),
+      }))
+      .filter(({ pricing }) => {
+        const effectiveDollars = pricing.effectiveHourlyRateCents / 100;
+        return effectiveDollars >= priceMin && effectiveDollars <= priceMax;
+      });
+
+    return { vehicles };
   } catch (error) {
     console.error(error);
-    return {
-      vehicles: [],
-    }
+    return { vehicles: [] };
   }
 }
 
@@ -153,9 +149,9 @@ function getQuote(input: {
   vehicleId: string;
   startTime: string;
   endTime: string;
-}) {
+}): PricingResult {
   const { vehicle, start, end } = validateReservationAndGetVehicle(input);
-  return calculateTotalPrice(start, end, vehicle.hourly_rate_cents);
+  return calculatePricing(vehicle.hourly_rate_cents, start, end);
 }
 
 export const API = {

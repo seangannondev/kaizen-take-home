@@ -1,5 +1,5 @@
 import { formatCents } from "@/lib/formatters";
-import { Vehicle } from "@/server/data";
+import { VehicleSearchResult } from "@/server/api";
 import { useBase64Image } from "@/util/useBase64Image";
 import Link from "next/link";
 import { Button } from "@/components/shared/ui/button";
@@ -10,7 +10,7 @@ export function VehicleListItem({
   startDateTime,
   endDateTime,
 }: {
-  vehicle: Vehicle;
+  vehicle: VehicleSearchResult;
   startDateTime: Date;
   endDateTime: Date;
 }) {
@@ -54,10 +54,26 @@ export function VehicleListItem({
         </dl>
       </div>
       <div className="md:ml-auto text-center md:text-right flex flex-col justify-center mt-4 md:mt-0">
-        <p className="text-xl font-bold">
-          {formatCents(vehicle.hourly_rate_cents)}
-          <span className="text-sm text-gray-700 font-normal ml-0.5">/hr</span>
-        </p>
+        {vehicle.pricing.discountType ? (
+          <>
+            <p className="text-sm text-gray-400 line-through">
+              {formatCents(vehicle.pricing.originalHourlyRateCents)}
+              <span className="font-normal ml-0.5">/hr</span>
+            </p>
+            <p className="text-xl font-bold">
+              {formatCents(vehicle.pricing.effectiveHourlyRateCents)}
+              <span className="text-sm text-gray-700 font-normal ml-0.5">/hr</span>
+            </p>
+            <p className="text-xs text-green-600 font-medium mt-0.5">
+              {vehicle.pricing.discountType === "holiday" ? "Holiday deal" : "Multi-day deal"}
+            </p>
+          </>
+        ) : (
+          <p className="text-xl font-bold">
+            {formatCents(vehicle.pricing.originalHourlyRateCents)}
+            <span className="text-sm text-gray-700 font-normal ml-0.5">/hr</span>
+          </p>
+        )}
         <Button asChild className="mt-2 w-full sm:w-auto">
           <Link href={`/review?${bookNowParams.toString()}`}>
             Book now
